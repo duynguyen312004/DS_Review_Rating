@@ -1,4 +1,1 @@
-# Thư mục này chứa model đã huấn luyện
-# - naive_bayes_model.pkl
-# - tfidf_vectorizer.pkl
-# (các file .pkl không được commit lên git - xem .gitignore)
+# Trained model artifacts directory.

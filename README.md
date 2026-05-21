@@ -1,94 +1,132 @@
-# 🍽️ Restaurant Review Sentiment Analysis
+# Restaurant Review Sentiment Analysis
 
-Dự án phân loại cảm xúc (Sentiment Analysis) từ các đánh giá nhà hàng bằng phương pháp **TF-IDF + Multinomial Naive Bayes**.
+Du an phan loai cam xuc review nha hang bang pipeline don gian:
 
-## 🎯 Bài toán
+- Input: noi dung review tieng Anh
+- Output: `Negative`, `Neutral`, hoac `Positive`
+- Phuong phap: TF-IDF + Multinomial Naive Bayes
 
-- **Input**: Nội dung bình luận (Review) bằng tiếng Anh
-- **Output**: Phân loại Sentiment → `Positive` / `Neutral` / `Negative`
-- **Dataset**: [10000 Restaurant Reviews (Kaggle)](https://www.kaggle.com/)
+## Cau truc project
 
-## 📁 Cấu trúc thư mục
-
-```
+```text
 Project/
-├── data/
-│   ├── raw/                    # Dữ liệu gốc (không chỉnh sửa)
-│   │   └── Restaurant_Reviews.csv
-│   └── processed/              # Dữ liệu đã làm sạch
-│       └── clean_reviews.csv
-├── notebooks/
-│   ├── 01_data_overview.ipynb      # Khám phá dataset ban đầu
-│   ├── 02_preprocessing.ipynb      # Làm sạch & tạo nhãn sentiment
-│   ├── 03_eda.ipynb                # Phân tích khám phá dữ liệu
-│   └── 04_train_naive_bayes.ipynb  # Train model & đánh giá
-├── src/
-│   └── predict.py              # Script dự đoán đơn giản
-├── figures/                    # Biểu đồ EDA và evaluation
-├── models/                     # Model đã huấn luyện (.pkl)
-├── reports/                    # Báo cáo và slide thuyết trình
-├── requirements.txt
-└── README.md
+|-- data/
+|   |-- raw/
+|   |   `-- restaurant_reviews.csv
+|   `-- processed/
+|       `-- clean_reviews.csv
+|-- notebooks/
+|   |-- 01_data_overview.ipynb
+|   |-- 02_preprocessing.ipynb
+|   |-- 03_eda.ipynb
+|   `-- 04_train_naive_bayes.ipynb
+|-- src/
+|   `-- predict.py
+|-- figures/
+|   |-- rating_distribution.png
+|   |-- sentiment_distribution.png
+|   |-- review_length_distribution.png
+|   `-- confusion_matrix.png
+|-- models/
+|   |-- naive_bayes_model.joblib
+|   `-- tfidf_vectorizer.joblib
+|-- reports/
+|   `-- classification_report.csv
+|-- requirements.txt
+`-- README.md
 ```
 
-## 🔄 Quy trình thực hiện
+## Quy trinh thuc hien
 
-| Bước | Notebook | Mô tả |
-|------|----------|-------|
-| 1 | `01_data_overview.ipynb` | Đọc dataset, kiểm tra cấu trúc, missing values, duplicates |
-| 2 | `02_preprocessing.ipynb` | Làm sạch text, tạo cột `sentiment` từ `Rating` |
-| 3 | `03_eda.ipynb` | Vẽ biểu đồ phân bố, phân tích dữ liệu |
-| 4 | `04_train_naive_bayes.ipynb` | TF-IDF, train Naive Bayes, đánh giá |
+1. `01_data_overview.ipynb`: doc du lieu raw, kiem tra hai cot chinh `Review` va `Rating`.
+2. `02_preprocessing.ipynb`: lam sach du lieu, chi giu rating nguyen 1-5, tao `review_clean` va `sentiment`.
+3. `03_eda.ipynb`: phan tich phan bo rating, sentiment va do dai review.
+4. `04_train_naive_bayes.ipynb`: train TF-IDF + Multinomial Naive Bayes va danh gia model.
 
-## 🏷️ Quy tắc gán nhãn Sentiment
+## Quy tac tao sentiment
 
 | Rating | Sentiment |
-|--------|-----------|
-| 1 ⭐, 2 ⭐ | Negative |
-| 3 ⭐ | Neutral |
-| 4 ⭐, 5 ⭐ | Positive |
+| --- | --- |
+| 1, 2 | Negative |
+| 3 | Neutral |
+| 4, 5 | Positive |
 
-## 🚀 Cách chạy
+## Ket qua sau preprocessing
 
-### 1. Cài đặt dependencies
+Sau khi loc missing values, rating khong hop le va duplicate review:
+
+```text
+So dong: 9219
+So cot: 4
+```
+
+Phan bo sentiment:
+
+```text
+Positive    5671
+Negative    2385
+Neutral     1163
+```
+
+## Ket qua model baseline
+
+Model: TF-IDF + Multinomial Naive Bayes
+
+```text
+Accuracy: 0.8221
+```
+
+Nhan xet:
+
+- Model du doan `Positive` tot nhat.
+- Model du doan `Negative` kha on.
+- Model du doan `Neutral` kem vi lop nay it du lieu va de bi nham voi hai lop con lai.
+- Khi bao cao, khong nen chi nhin accuracy; can xem them F1-score va confusion matrix.
+
+## Cach chay
+
+### 1. Cai dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Chuẩn bị dữ liệu
+### 2. Chay notebook theo thu tu
 
-Đặt file `Restaurant_Reviews.csv` vào thư mục `data/raw/`
-
-### 3. Chạy notebook theo thứ tự
-
-```
+```text
 notebooks/01_data_overview.ipynb
 notebooks/02_preprocessing.ipynb
 notebooks/03_eda.ipynb
 notebooks/04_train_naive_bayes.ipynb
 ```
 
-### 4. Dự đoán review mới
+Notebook 4 se tao:
 
-```bash
-python src/predict.py "The food was amazing and the staff was very friendly."
+```text
+models/naive_bayes_model.joblib
+models/tfidf_vectorizer.joblib
+reports/classification_report.csv
+figures/confusion_matrix.png
 ```
 
-## 🛠️ Công nghệ sử dụng
+### 3. Du doan review moi
 
-- **Python 3.x**
-- **Pandas, NumPy** – xử lý dữ liệu
-- **Matplotlib, Seaborn** – trực quan hóa
-- **Scikit-learn** – TF-IDF, Naive Bayes, đánh giá model
-- **Jupyter Notebook** – môi trường làm việc
+```bash
+python src/predict.py "The food was amazing and the staff were very friendly."
+```
 
-## 📊 Kết quả (sẽ cập nhật sau khi train)
+Vi du output:
 
-| Model | Accuracy | Macro F1 |
-|-------|----------|----------|
-| Multinomial Naive Bayes | - | - |
+```text
+Predicted sentiment: Positive
+```
 
-## 📝 Tác giả
+## Cong nghe su dung
 
-Nhóm 5 – Môn Data Science
+- Python
+- pandas
+- matplotlib
+- seaborn
+- scikit-learn
+- joblib
+- Jupyter Notebook

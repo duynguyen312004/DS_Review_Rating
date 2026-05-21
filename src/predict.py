@@ -1,57 +1,65 @@
-"""
-predict.py - Script dự đoán sentiment cho review nhà hàng
+import argparse
+import re
+from pathlib import Path
 
-Cách dùng:
-    python src/predict.py "The food was amazing and the staff was very friendly."
-"""
-
-import sys
-import os
 import joblib
 
-MODEL_PATH = os.path.join(os.path.dirname(__file__), '..', 'models', 'naive_bayes_model.pkl')
-VECTORIZER_PATH = os.path.join(os.path.dirname(__file__), '..', 'models', 'tfidf_vectorizer.pkl')
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+MODEL_PATH = PROJECT_ROOT / "models" / "naive_bayes_model.joblib"
+VECTORIZER_PATH = PROJECT_ROOT / "models" / "tfidf_vectorizer.joblib"
 
 
-def load_model():
-    """Load model và vectorizer đã train."""
-    if not os.path.exists(MODEL_PATH) or not os.path.exists(VECTORIZER_PATH):
-        print("[ERROR] Chưa có model. Hãy chạy notebook 04_train_naive_bayes.ipynb trước!")
-        sys.exit(1)
+def clean_text(text):
+    text = str(text).lower()
+    text = re.sub(r"http\S+|www\S+", " ", text)
+    text = re.sub(r"[^a-z\s]", " ", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
+
+
+def load_artifacts():
+    if not MODEL_PATH.exists():
+        raise FileNotFoundError(f"Model file not found: {MODEL_PATH}")
+    if not VECTORIZER_PATH.exists():
+        raise FileNotFoundError(f"Vectorizer file not found: {VECTORIZER_PATH}")
+
     model = joblib.load(MODEL_PATH)
     vectorizer = joblib.load(VECTORIZER_PATH)
     return model, vectorizer
 
 
-def predict_sentiment(review_text: str) -> str:
-    """
-    Dự đoán sentiment cho một review.
-    
-    Args:
-        review_text: Nội dung review tiếng Anh
-    Returns:
-        'Positive', 'Neutral', hoặc 'Negative'
-    """
-    model, vectorizer = load_model()
-    review_vec = vectorizer.transform([review_text])
-    prediction = model.predict(review_vec)[0]
-    return prediction
+def predict_sentiment(review):
+    model, vectorizer = load_artifacts()
+    review_clean = clean_text(review)
+    review_vector = vectorizer.transform([review_clean])
+    prediction = model.predict(review_vector)[0]
+
+    probabilities = None
+    if hasattr(model, "predict_proba"):
+        probabilities = dict(zip(model.classes_, model.predict_proba(review_vector)[0]))
+
+    return review_clean, prediction, probabilities
 
 
 def main():
-    if len(sys.argv) < 2:
-        print("Cách dùng: python src/predict.py \"<nội dung review>\"")
-        print("\nVí dụ:")
-        print('  python src/predict.py "The food was amazing!"')
-        sys.exit(1)
+    parser = argparse.ArgumentParser(
+        description="Predict restaurant review sentiment using the trained TF-IDF + Naive Bayes model."
+    )
+    parser.add_argument("review", nargs="+", help="Review text to classify.")
+    args = parser.parse_args()
 
-    review = sys.argv[1]
-    print(f"\n📝 Review: {review}")
-    sentiment = predict_sentiment(review)
+    review = " ".join(args.review)
+    review_clean, prediction, probabilities = predict_sentiment(review)
 
-    emoji_map = {"Positive": "✅", "Neutral": "😐", "Negative": "❌"}
-    emoji = emoji_map.get(sentiment, "❓")
-    print(f"{emoji}  Sentiment: {sentiment}\n")
+    print("Input review:", review)
+    print("Clean review:", review_clean)
+    print("Predicted sentiment:", prediction)
+
+    if probabilities:
+        print("Class probabilities:")
+        for label, probability in sorted(probabilities.items()):
+            print(f"  {label}: {probability:.4f}")
 
 
 if __name__ == "__main__":
